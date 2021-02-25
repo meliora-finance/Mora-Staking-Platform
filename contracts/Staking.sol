@@ -674,7 +674,7 @@ abstract contract ERC20Burnable is Context, ERC20 {
     }
 }
 
-// File: contracts/XXToken.sol
+// File: contracts/Mora.sol
 
 // SPDX-License-Identifier: MIT
 
@@ -693,9 +693,9 @@ contract XXToken is ERC20Burnable {
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.8.0;
 
-contract XXTokenStaking{
+contract MelioraStaking{
   using SafeMath for uint;
-    XXToken private token;
+    Mora private token;
     address private owner;
     uint[] private burnDates;
     uint constant montlyRewardAllocation = 100000;
@@ -744,12 +744,12 @@ contract XXTokenStaking{
     //uint256 _amount = _amo * (10**18);
     uint256 _amount = _amo;
     uint _rewardRate;
-    //if ( _amount < 5000 * (10**18)) { _rewardRate = 10000;} // 0.0058 / 50
-    //if (_amount >= 5000  * (10**18) && _amount < 15000 * (10**18) ) { _rewardRate = 20000;} //0,0080  / 70
-    //if (_amount >= 15000 * (10**18)) { _rewardRate = 30000;} // 0.0102 / 90
-    if ( _amount < 5000 && _amount ) { _rewardRate = 1000;} // 0.0058 / 50
-    if (_amount >= 5000 && _amount < 15000 ) { _rewardRate = 2000;} //0,0080  / 70
-    if (_amount >= 15000 ) { _rewardRate = 3000;} // 0.0102 / 90
+    //if ( _amount > 2000 && _amount < 7000 ) { _rewardRate = 1000;} // 0.0058 / 50
+    //if (_amount >= 7000 && _amount < 16000 ) { _rewardRate = 2000;} //0,0080  / 70
+    //if (_amount >= 16000 ) { _rewardRate = 3000;} // 0.0102 / 90
+    if ( _amount > 2000 && _amount < 7000 ) { _rewardRate = 1000;} // 0.0058 / 50
+    if (_amount >= 7000 && _amount < 16000 ) { _rewardRate = 2000;} //0,0080  / 70
+    if (_amount >= 16000 ) { _rewardRate = 3000;} // 0.0102 / 90
 
     uint _stakeDate = block.timestamp;
     require(token.transferFrom(_staker, _to, _amount),"failed");
