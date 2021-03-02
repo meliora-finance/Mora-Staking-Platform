@@ -785,8 +785,8 @@ contract MelioraStaking{
     address _staker = msg.sender;
     return ownerToStakes[_staker];
   }
-
-  function MontlyBurn () onlyOwner external returns (uint result) {
+    //can be called anyone montly
+  function MontlyBurn () external returns (uint result) {
 
     uint _distrubutedReward = 0;
     uint _lastBurn = burnDates.length.sub(1);
