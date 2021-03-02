@@ -781,8 +781,8 @@ contract MelioraStaking{
   }
 
 
-  function MyStakes() external view returns(uint[] memory) {
-    address _staker = msg.sender;
+  function MyStakes(address _Staker) external view returns(uint[] memory) {
+    address _staker = _Staker;
     return ownerToStakes[_staker];
   }
     //can be called anyone montly
