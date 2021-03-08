@@ -766,7 +766,7 @@ contract MoraStaking{
     return true;
   }
 
-    //If the time has come, burn function can be called by anyone who wish. 
+    //When it's time, burn function can be called by anyone who wishes. 
   function MontlyBurn () external returns (uint result) {
     uint256 _distrubutedReward = 0;
     uint _lastBurnDate = burnDates[burnDates.length.sub(1)];
