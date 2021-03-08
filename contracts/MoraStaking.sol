@@ -724,7 +724,7 @@ contract MoraStaking{
     nonZeroAddress(_token)
     {
       token = Moratoken(_token);
-      burnDates.push(block.timestamp);
+      burnDates.push(0);
     }
 
   // Transfer the staking tokens under the control of the staking contract
@@ -734,9 +734,9 @@ contract MoraStaking{
     uint256 _amount = _amo * (10**18);
     uint _rewardRate;
     if ( _amount < 2000 * (10**18) ) { _rewardRate = 0;}
-    if ( _amount >= 2000 * (10**18) && _amount < 7000 * (10**18) ) { _rewardRate = 5800;} // Multiply 10**4
-    if (_amount >= 7000 * (10**18) && _amount < 16000 * (10**18) ) { _rewardRate = 8000;} // Multiply 10**4
-    if (_amount >= 16000 * (10**18)) { _rewardRate = 10200;} // Multiply 10**4
+    if ( _amount >= 2000 * (10**18) && _amount < 7000 * (10**18) ) { _rewardRate = 58;} // Multiply 10**4 - APY 50 %  - Hourly 0.0058
+    if (_amount >= 7000 * (10**18) && _amount < 16000 * (10**18) ) { _rewardRate = 80;} // Multiply 10**4 - APY 70 %  - Hourly 0.0080
+    if (_amount >= 16000 * (10**18)) { _rewardRate = 102;}                              // Multiply 10**4 - APY 90 %  - Hourly 0.0102
     uint _stakeDate = block.timestamp;
     require(token.transferFrom(_staker, _to, _amount),"failed");
     stakeBoxs.push(StakeBox(_staker, _amount, _rewardRate, _stakeDate , 0, 0, 0, true));
@@ -752,8 +752,8 @@ contract MoraStaking{
     address _staker = msg.sender;
     require(stakeBoxs[_stakeID].unstakeDate == 0, "already-claimed-before");
     require(stakeBoxs[_stakeID].staker == _staker,"this-is-not-yours");
-    uint _stakePeriodInHour = (block.timestamp - stakeBoxs[_stakeID].stakeDate ) / 60; //3600 for 1 hour
-    require(_stakePeriodInHour >= 1,"Can't unstake before 1 hour"); // 48 Hours
+    uint _stakePeriodInHour = (block.timestamp - stakeBoxs[_stakeID].stakeDate ) / 3600; // Stake Period in Hour
+    require(_stakePeriodInHour >= 48,"Can't unstake before 48 hours"); //Unstake not permitted in firs 48 hours
     uint _amount = stakeBoxs[_stakeID].amount;
     uint _reward = (_stakePeriodInHour * (stakeBoxs[_stakeID].rewardRate / 10**4)) * _amount / 100; // division for 10**4
     uint _claimedAmount = _amount + _reward;
@@ -772,7 +772,7 @@ contract MoraStaking{
     uint _lastBurnDate = burnDates[burnDates.length.sub(1)];
     uint256 _burnAmount;
     uint _elapsedTime = block.timestamp.sub(_lastBurnDate);
-    require(_elapsedTime >= 600,"Not Yet"); //2592000 for 30 days
+    require(_elapsedTime >= 2592000,"Not Yet"); //2592000 for 30 days
     for(uint i = 0; i <  stakeBoxs.length; i++) {
        if(stakeBoxs[i].isActive == false && stakeBoxs[i].unstakeDate >= _lastBurnDate){ _distrubutedReward += stakeBoxs[i].reward; }
     }
@@ -826,10 +826,10 @@ contract MoraStaking{
     return (2592000 - _elapsedTime) / 3600; //in  hours
   }
   
-    function lastBurnDate() external view returns (uint result) {
-     uint _lastBurnDate;
-     _lastBurnDate = burnDates[burnDates.length.sub(1)];
-     return _lastBurnDate;
+  function lastBurnDate() external view returns (uint result) {
+   uint _lastBurnDate;
+   _lastBurnDate = burnDates[burnDates.length.sub(1)];
+   return _lastBurnDate;
   }
   
 
