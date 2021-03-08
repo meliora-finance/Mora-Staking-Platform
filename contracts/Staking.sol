@@ -820,7 +820,7 @@ contract MoraStaking{
     return _totalBurned;
   }
   
-  function RemaingHoursToNextBurn() external view returns (uint result) {
+  function RemainingHoursToNextBurn() external view returns (uint result) {
     uint _lastBurnDate = burnDates[burnDates.length.sub(1)];
     uint _elapsedTime = block.timestamp.sub(_lastBurnDate);
     return (2592000 - _elapsedTime / 3600); //in  hours
