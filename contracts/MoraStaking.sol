@@ -736,7 +736,7 @@ contract MoraStaking{
     if ( _amount < 2000 * (10**18) ) { _rewardRate = 0;}
     if ( _amount >= 2000 * (10**18) && _amount < 7000 * (10**18) ) { _rewardRate = 58;} // Multiply 10**4 - APY 50 %  - Hourly 0.0058
     if (_amount >= 7000 * (10**18) && _amount < 16000 * (10**18) ) { _rewardRate = 80;} // Multiply 10**4 - APY 70 %  - Hourly 0.0080
-    if (_amount >= 16000 * (10**18)) { _rewardRate = 102;}                              // Multiply 10**4 - APY 90 %  - Hourly 0.0102
+    if (_amount >= 16000 * (10**18)) { _rewardRate = 103;}                              // Multiply 10**4 - APY 90 %  - Hourly 0.0103
     uint _stakeDate = block.timestamp;
     require(token.transferFrom(_staker, _to, _amount),"failed");
     stakeBoxs.push(StakeBox(_staker, _amount, _rewardRate, _stakeDate , 0, 0, 0, true));
@@ -753,7 +753,7 @@ contract MoraStaking{
     require(stakeBoxs[_stakeID].unstakeDate == 0, "already-claimed-before");
     require(stakeBoxs[_stakeID].staker == _staker,"this-is-not-yours");
     uint _stakePeriodInHour = (block.timestamp - stakeBoxs[_stakeID].stakeDate ) / 3600; // Stake Period in Hour
-    require(_stakePeriodInHour >= 48,"Can't unstake before 48 hours"); //Unstake not permitted in firs 48 hours
+    require(_stakePeriodInHour >= 48,"cant-unstake-before-48-hours"); //Unstake not permitted in firs 48 hours
     uint _amount = stakeBoxs[_stakeID].amount;
     uint _reward = (_stakePeriodInHour * (stakeBoxs[_stakeID].rewardRate / 10**4)) * _amount / 100; // division for 10**4
     uint _claimedAmount = _amount + _reward;
