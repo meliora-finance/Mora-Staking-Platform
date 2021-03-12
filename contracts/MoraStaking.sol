@@ -748,20 +748,19 @@ contract MoraStaking{
   }
 
   function UnstakeAndClaim(uint _stakeID) public returns (bool result) {
-    address _staker = msg.sender;
     uint _stakePeriodInHour = (block.timestamp - stakeBoxs[_stakeID].stakeDate ) / 3600; // Stake Period in Hour
     uint _amount = stakeBoxs[_stakeID].amount;
     uint _reward = (_stakePeriodInHour * (stakeBoxs[_stakeID].rewardRate / 10**4)) * _amount / 100; // division for 10**4
     uint _claimedAmount = _amount + _reward;
     require(stakeBoxs[_stakeID].unstakeDate == 0, "already-claimed-before");
-    require(stakeBoxs[_stakeID].staker == _staker,"this-is-not-yours");
+    require(stakeBoxs[_stakeID].staker == msg.sender,"this-is-not-yours");
     require(_stakePeriodInHour >= 48,"cant-unstake-before-48-hours"); //Unstake not permitted in firs 48 hours
     stakeBoxs[_stakeID].unstakeDate = block.timestamp;
     stakeBoxs[_stakeID].claimedAmount = _claimedAmount;
     stakeBoxs[_stakeID].reward = _reward;
     stakeBoxs[_stakeID].isActive = false;
     require(token.transfer(_staker, _claimedAmount),"Failed");
-    emit evUnstake(_staker, _stakeID, _amount, _reward, _claimedAmount, block.timestamp);
+    emit evUnstake(msg.sender, _stakeID, _amount, _reward, _claimedAmount, block.timestamp);
     return true;
   }
 
