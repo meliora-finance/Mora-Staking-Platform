@@ -729,20 +729,19 @@ contract MoraStaking{
 
   // Transfer the staking tokens under the control of the staking contract
   function Stake(uint256 _amo) external returns(bool success) {
-    address _to = address(this);
     uint256 _amount = _amo * (10**18);
     uint _rewardRate;
+    uint _stakeDate = block.timestamp;
     if ( _amount < 2000 * (10**18) ) { _rewardRate = 0;}
     if ( _amount >= 2000 * (10**18) && _amount < 7000 * (10**18) ) { _rewardRate = 58;} // Multiply 10**4 - APY 50 %  - Hourly 0.0058
     if (_amount >= 7000 * (10**18) && _amount < 16000 * (10**18) ) { _rewardRate = 80;} // Multiply 10**4 - APY 70 %  - Hourly 0.0080
     if (_amount >= 16000 * (10**18)) { _rewardRate = 103;}                              // Multiply 10**4 - APY 90 %  - Hourly 0.0103
-    uint _stakeDate = block.timestamp;
-    require(token.transferFrom(msg.sender, _to, _amount),"failed");
     stakeBoxs.push(StakeBox(msg.sender, _amount, _rewardRate, _stakeDate , 0, 0, 0, true));
     uint _stakeID = stakeBoxs.length.sub(1);
     stakeToOwner[_stakeID] = msg.sender;
     ownerStakeCount[msg.sender].add(1);
     ownerToStakes[msg.sender].push(_stakeID);
+    require(token.transferFrom(msg.sender, address(this), _amount),"failed");
     emit evStake(msg.sender, _stakeID, _amount, _stakeDate);
     return true;
   }
