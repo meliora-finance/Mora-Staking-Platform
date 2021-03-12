@@ -728,7 +728,7 @@ contract MoraStaking{
     }
 
   // Transfer the staking tokens under the control of the staking contract
-  function Stake(uint256 _amo) public returns(bool success) {
+  function Stake(uint256 _amo) external returns(bool success) {
     address _to = address(this);
     uint256 _amount = _amo * (10**18);
     uint _rewardRate;
@@ -747,7 +747,7 @@ contract MoraStaking{
     return true;
   }
 
-  function UnstakeAndClaim(uint _stakeID) public returns (bool result) {
+  function UnstakeAndClaim(uint _stakeID) external returns (bool result) {
     uint _stakePeriodInHour = (block.timestamp - stakeBoxs[_stakeID].stakeDate ) / 3600; // Stake Period in Hour
     uint _amount = stakeBoxs[_stakeID].amount;
     uint _reward = (_stakePeriodInHour * (stakeBoxs[_stakeID].rewardRate / 10**4)) * _amount / 100; // division for 10**4
