@@ -766,9 +766,9 @@ contract MoraStaking{
 
     //Burn function can call anyone when times up!
   function MontlyBurn () external returns (uint result) {
-    uint256 _distrubutedReward = 0;
-    uint _lastBurnDate = burnDates[burnDates.length.sub(1)];
+    uint256 _distrubutedReward;
     uint256 _burnAmount;
+    uint _lastBurnDate = burnDates[burnDates.length.sub(1)];
     uint _elapsedTime = block.timestamp.sub(_lastBurnDate);
     require(_elapsedTime >= 2592000,"Not Yet"); //2592000 for 30 days
     for(uint i = 0; i <  stakeBoxs.length; i++) {
@@ -778,9 +778,9 @@ contract MoraStaking{
        }
     }
       _burnAmount = montlyRewardAllocation.sub(_distrubutedReward);
-      token.burn(_burnAmount);
       burnDates.push(block.timestamp);
       totalBurned += _burnAmount;
+      token.burn(_burnAmount);
       emit evMontlyBurn(block.timestamp, _distrubutedReward, _burnAmount);
       return _burnAmount;
     }
