@@ -772,13 +772,16 @@ contract MoraStaking{
     uint _elapsedTime = block.timestamp.sub(_lastBurnDate);
     require(_elapsedTime >= 2592000,"Not Yet"); //2592000 for 30 days
     for(uint i = 0; i <  stakeBoxs.length; i++) {
-       if(stakeBoxs[i].isActive == false && stakeBoxs[i].unstakeDate >= _lastBurnDate){ _distrubutedReward += stakeBoxs[i].reward; }
+       if(stakeBoxs[i].isActive == false && stakeBoxs[i].unstakeDate >= _lastBurnDate)
+       { 
+       _distrubutedReward += stakeBoxs[i].reward;
+       }
     }
       _burnAmount = montlyRewardAllocation.sub(_distrubutedReward);
       token.burn(_burnAmount);
       burnDates.push(block.timestamp);
-      emit evMontlyBurn(block.timestamp, _distrubutedReward, _burnAmount);
       totalBurned += _burnAmount;
+      emit evMontlyBurn(block.timestamp, _distrubutedReward, _burnAmount);
       return _burnAmount;
     }
 
