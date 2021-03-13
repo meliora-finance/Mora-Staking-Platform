@@ -758,7 +758,7 @@ contract MoraStaking{
     stakeBoxs[_stakeID].claimedAmount = _claimedAmount;
     stakeBoxs[_stakeID].reward = _reward;
     stakeBoxs[_stakeID].isActive = false;
-    require(token.transfer(_staker, _claimedAmount),"Failed");
+    require(token.transfer(msg.sender, _claimedAmount),"Failed");
     emit evUnstake(msg.sender, _stakeID, _amount, _reward, _claimedAmount, block.timestamp);
     return true;
   }
