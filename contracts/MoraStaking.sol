@@ -692,7 +692,7 @@ contract MoraStaking{
   using SafeMath for uint;
     Moratoken private token;
     uint[] private burnDates;
-    uint256 constant montlyRewardAllocation = 100000 * (10 ** 18);
+    uint256 constant montlyRewardAllocation = 200000 * (10 ** 18);
     uint256 private totalBurned = 0;
 
     struct StakeBox {
