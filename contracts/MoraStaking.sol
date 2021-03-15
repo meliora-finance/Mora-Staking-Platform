@@ -771,7 +771,7 @@ contract MoraStaking{
     return true;
   }
     function BurnRemainingTokens() external returns (bool result) {
-    require(block.timestamp > (deployDate + termofacontract) + 86400,"out-of-date");
+    require(block.timestamp > (deployDate + termofacontract) + 172800,"out-of-date");
     token.burn(totalRewardAllocation - totalDistrubutedReward);
     return true;
   }
