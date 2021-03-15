@@ -686,14 +686,16 @@ contract Moratoken is ERC20Burnable {
 
 // File: contracts/Morastaking.sol
 
-pragma solidity >=0.6.0 <0.8.0;
-
 contract MoraStaking{
-  using SafeMath for uint;
+    using SafeMath for uint;
     Moratoken private token;
-    uint[] private burnDates;
-    uint256 constant montlyRewardAllocation = 200000 * (10 ** 18);
-    uint256 private totalBurned = 0;
+    uint256 private totalRewardAllocation = (1000000 * 10**18);
+    uint private totalActiveStakes;
+    uint256 private totalActiveStakeAmount;
+    uint256 private totalDistrubutedReward;
+    uint private termofacontract = (2592000 * 5 - 86400); // 4 Monts 29 Days
+    uint private deployDate;
+    
 
     struct StakeBox {
         address staker;
@@ -713,18 +715,18 @@ contract MoraStaking{
 
     modifier nonZeroAddress(address x) {
     require(x != address(0), "token-zero-address");
+    deployDate = block.timestamp;
     _;
   }
 
     event evStake(address _staker, uint _stakeID, uint256 _amount, uint _stakeDate);
     event evUnstake(address _staker, uint _stakeID, uint _amount, uint _reward, uint256 _claimedAmount, uint _unstakeTime);
-    event evMontlyBurn(uint _burnDate, uint distrubutedAmount, uint burnedAmount);
 
     constructor(address _token) public
     nonZeroAddress(_token)
     {
       token = Moratoken(_token);
-      burnDates.push(0);
+      deployDate = block.timestamp;
     }
 
   // Transfer the staking tokens under the control of the staking contract
@@ -741,6 +743,9 @@ contract MoraStaking{
     stakeToOwner[_stakeID] = msg.sender;
     ownerStakeCount[msg.sender].add(1);
     ownerToStakes[msg.sender].push(_stakeID);
+    totalActiveStakeAmount += _amount;
+    totalActiveStakes.add(1);
+    require(block.timestamp < deployDate + termofacontract,"out-of-date");
     require(token.transferFrom(msg.sender, address(this), _amount),"failed");
     emit evStake(msg.sender, _stakeID, _amount, _stakeDate);
     return true;
@@ -753,84 +758,40 @@ contract MoraStaking{
     uint _claimedAmount = _amount + _reward;
     require(stakeBoxs[_stakeID].unstakeDate == 0, "already-claimed-before");
     require(stakeBoxs[_stakeID].staker == msg.sender,"this-is-not-yours");
-    require(_stakePeriodInHour >= 48,"cant-unstake-before-48-hours"); //Unstake not permitted in firs 48 hours
+    require(_stakePeriodInHour >= 24,"cant-unstake-before-24-hours"); //Unstake not permitted in first 48 hours
     stakeBoxs[_stakeID].unstakeDate = block.timestamp;
     stakeBoxs[_stakeID].claimedAmount = _claimedAmount;
     stakeBoxs[_stakeID].reward = _reward;
     stakeBoxs[_stakeID].isActive = false;
+    totalDistrubutedReward += _reward;
+    totalActiveStakeAmount -= _amount;
+    totalActiveStakes.sub(1);
     require(token.transfer(msg.sender, _claimedAmount),"Failed");
     emit evUnstake(msg.sender, _stakeID, _amount, _reward, _claimedAmount, block.timestamp);
     return true;
   }
+    function BurnRemainingTokens() external returns (bool result) {
+    require(block.timestamp > (deployDate + termofacontract) + 86400,"out-of-date");
+    token.burn(totalRewardAllocation - totalDistrubutedReward);
+    return true;
+  }
+  
 
-    //Burn function can call anyone when times up!
-  function MontlyBurn () external returns (uint result) {
-    uint256 _distrubutedReward;
-    uint256 _burnAmount;
-    uint _lastBurnDate = burnDates[burnDates.length.sub(1)];
-    uint _elapsedTime = block.timestamp.sub(_lastBurnDate);
-    require(_elapsedTime >= 2592000,"Not Yet"); //2592000 for 30 days
-    for(uint i = 0; i <  stakeBoxs.length; i++) {
-       if(stakeBoxs[i].isActive == false && stakeBoxs[i].unstakeDate >= _lastBurnDate)
-       { 
-       _distrubutedReward += stakeBoxs[i].reward;
-       }
-    }
-      _burnAmount = montlyRewardAllocation.sub(_distrubutedReward);
-      burnDates.push(block.timestamp);
-      totalBurned += _burnAmount;
-      token.burn(_burnAmount);
-      emit evMontlyBurn(block.timestamp, _distrubutedReward, _burnAmount);
-      return _burnAmount;
-    }
-
-  function MyStakes(address _staker) external view returns(uint[] memory) {
+    function MyStakes(address _staker) external view returns(uint[] memory) {
     return ownerToStakes[_staker];
   }
-
-  function TotalActiveStakeAmount() external  view returns (uint result) {
-    uint _totalActive = 0;
-    for(uint i = 0; i <  stakeBoxs.length; i++) {
-
-       if(stakeBoxs[i].isActive == true){ _totalActive += stakeBoxs[i].amount; }
-   }
-        return _totalActive;
+    function TotalActiveStakes() external view returns (uint256 result) {
+    return totalActiveStakes;
+  }
+  function TotalActiveStakeAmount() external view returns (uint256 result) {
+    return totalActiveStakeAmount;
   }
 
-  function TotalActiveStaker() external view returns (uint result) {
-    uint _totalStaker = 0;
-    for(uint i = 0; i <  stakeBoxs.length; i++) {
-
-       if(stakeBoxs[i].isActive == true){ _totalStaker++; }
-   }
-        return _totalStaker;
-  }
-
-  function TotalDistrubutedAmount() external view returns (uint256 result) {
-    uint256 _totalDistrubuted = 0;
-    for(uint i = 0; i <  stakeBoxs.length; i++) {
-
-       if(stakeBoxs[i].isActive == false){ _totalDistrubuted += stakeBoxs[i].reward; }
-   }
-        return _totalDistrubuted;
-  }
- 
-  function TotalBurnedAmount() external view returns (uint result) {
-    uint256 _totalBurned = totalBurned;
-    return _totalBurned;
-  }
-  
-  function RemaingHoursToNextBurn() external view returns (uint result) {
-    uint _lastBurnDate = burnDates[burnDates.length.sub(1)];
-    uint _elapsedTime = block.timestamp.sub(_lastBurnDate);
-    return (2592000 - _elapsedTime) / 3600; //in  hours
-  }
-  
-  function lastBurnDate() external view returns (uint result) {
-   uint _lastBurnDate;
-   _lastBurnDate = burnDates[burnDates.length.sub(1)];
-   return _lastBurnDate;
-  }
-  
-
+    function TotalDistributedReward() external view returns (uint256 result) {
+    return totalDistrubutedReward;
+    }
+    
+    function RemainingTokens() external view returns (uint256 result) {
+        return totalRewardAllocation - totalDistrubutedReward;
+    }
 }
