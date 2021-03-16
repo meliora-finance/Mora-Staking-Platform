@@ -678,13 +678,14 @@ pragma solidity >=0.6.0 <0.8.0;
 
 contract Moratoken is ERC20Burnable {
     constructor(uint256 _initialSupply, string memory _name, string memory _symbol)  public ERC20 (_name, _symbol) {
-        _mint(msg.sender, _initialSupply);
-        //_mint(msg.sender, _initialSupply * (10 ** uint256(decimals())));
+        _mint(msg.sender, _initialSupply * (10 ** uint256(decimals())));
 
     }
 }
 
 // File: contracts/Morastaking.sol
+
+pragma solidity >=0.6.0 <0.8.0;
 
 contract MoraStaking{
     using SafeMath for uint;
@@ -693,7 +694,7 @@ contract MoraStaking{
     uint private totalActiveStakes;
     uint256 private totalActiveStakeAmount;
     uint256 private totalDistrubutedReward;
-    uint private termofacontract = (2592000 * 5 - 86400); // 4 Monts 29 Days
+    uint private termofacontract = (2592000 * 5); // 5 Months
     uint private deployDate;
     
 
@@ -745,7 +746,7 @@ contract MoraStaking{
     ownerToStakes[msg.sender].push(_stakeID);
     totalActiveStakeAmount += _amount;
     totalActiveStakes.add(1);
-    require(block.timestamp < deployDate + termofacontract,"out-of-date");
+    require(block.timestamp < (deployDate + termofacontract) - 21600,"out-of-date"); // make non-stakable 6 hours before from end time.
     require(token.transferFrom(msg.sender, address(this), _amount),"failed");
     emit evStake(msg.sender, _stakeID, _amount, _stakeDate);
     return true;
@@ -758,7 +759,7 @@ contract MoraStaking{
     uint _claimedAmount = _amount + _reward;
     require(stakeBoxs[_stakeID].unstakeDate == 0, "already-claimed-before");
     require(stakeBoxs[_stakeID].staker == msg.sender,"this-is-not-yours");
-    require(_stakePeriodInHour >= 24,"cant-unstake-before-24-hours"); //Unstake not permitted in first 48 hours
+    require(_stakePeriodInHour >= 24,"cant-unstake-before-24-hours"); //Unstake not permitted in first 24 hours
     stakeBoxs[_stakeID].unstakeDate = block.timestamp;
     stakeBoxs[_stakeID].claimedAmount = _claimedAmount;
     stakeBoxs[_stakeID].reward = _reward;
@@ -770,8 +771,9 @@ contract MoraStaking{
     emit evUnstake(msg.sender, _stakeID, _amount, _reward, _claimedAmount, block.timestamp);
     return true;
   }
+  
     function BurnRemainingTokens() external returns (bool result) {
-    require(block.timestamp > (deployDate + termofacontract) + 172800,"out-of-date");
+    require(block.timestamp > (deployDate + termofacontract) + 86400,"out-of-date"); // Burnable after 24 hours from end time.
     token.burn(totalRewardAllocation - totalDistrubutedReward);
     return true;
   }
@@ -794,4 +796,5 @@ contract MoraStaking{
     function RemainingTokens() external view returns (uint256 result) {
         return totalRewardAllocation - totalDistrubutedReward;
     }
+ 
 }
