@@ -696,16 +696,18 @@ contract MoraStaking{
     uint256 private totalDistrubutedReward;
     uint private termofacontract = (2592000 * 5); // 5 Months
     uint private deployDate;
+    uint256 private startDate;
+    
     
 
     struct StakeBox {
         address staker;
         uint256 amount;
         uint rewardRate;
-        uint stakeDate;
-        uint unstakeDate;
+        uint256 stakeDate;
+        uint256 unstakeDate;
         uint256 claimedAmount;
-        uint reward;
+        uint256 reward;
         bool isActive;
     }
     StakeBox[] public stakeBoxs;
@@ -723,63 +725,65 @@ contract MoraStaking{
     event evStake(address _staker, uint _stakeID, uint256 _amount, uint _stakeDate);
     event evUnstake(address _staker, uint _stakeID, uint _amount, uint _reward, uint256 _claimedAmount, uint _unstakeTime);
 
-    constructor(address _token) public
+    constructor(address _token, uint256 _startDate) public
     nonZeroAddress(_token)
     {
       token = Moratoken(_token);
       deployDate = block.timestamp;
+      startDate = _startDate;
     }
 
   // Transfer the staking tokens under the control of the staking contract
-  function Stake(uint256 _amo) external returns(bool success) {
-    uint256 _amount = _amo * (10**18);
+  function Stake(uint256 _amount) external returns(bool success) {
+    require(block.timestamp >= startDate,"not-yet");
+    _amount = _amount * (10**18);
     uint _rewardRate;
     uint _stakeDate = block.timestamp;
     if ( _amount < 2000 * (10**18) ) { _rewardRate = 0;}
     if ( _amount >= 2000 * (10**18) && _amount < 7000 * (10**18) ) { _rewardRate = 58;} // Multiply 10**4 - APY 50 %  - Hourly 0.0058
-    if (_amount >= 7000 * (10**18) && _amount < 16000 * (10**18) ) { _rewardRate = 80;} // Multiply 10**4 - APY 70 %  - Hourly 0.0080
-    if (_amount >= 16000 * (10**18)) { _rewardRate = 103;}                              // Multiply 10**4 - APY 90 %  - Hourly 0.0103
+    if ( _amount >= 7000 * (10**18) && _amount < 16000 * (10**18) ) { _rewardRate = 81;} // Multiply 10**4 - APY 70 %  - Hourly 0.0080
+    if ( _amount >= 16000 * (10**18)) { _rewardRate = 104;}                              // Multiply 10**4 - APY 90 %  - Hourly 0.0104
     stakeBoxs.push(StakeBox(msg.sender, _amount, _rewardRate, _stakeDate , 0, 0, 0, true));
     uint _stakeID = stakeBoxs.length.sub(1);
     stakeToOwner[_stakeID] = msg.sender;
     ownerStakeCount[msg.sender].add(1);
     ownerToStakes[msg.sender].push(_stakeID);
     totalActiveStakeAmount += _amount;
-    totalActiveStakes.add(1);
-    require(block.timestamp < (deployDate + termofacontract) - 21600,"out-of-date"); // make non-stakable 6 hours before from end time.
+    totalActiveStakes += 1;
+    require(block.timestamp < (deployDate + termofacontract) - 21600,"out-of-date"); // make non-stakable 6 hours before from end time. //21600
     require(token.transferFrom(msg.sender, address(this), _amount),"failed");
     emit evStake(msg.sender, _stakeID, _amount, _stakeDate);
     return true;
   }
 
   function UnstakeAndClaim(uint _stakeID) external returns (bool result) {
-    uint _stakePeriodInHour = (block.timestamp - stakeBoxs[_stakeID].stakeDate ) / 3600; // Stake Period in Hour
-    uint _amount = stakeBoxs[_stakeID].amount;
-    uint _reward = (_stakePeriodInHour * (stakeBoxs[_stakeID].rewardRate / 10**4)) * _amount / 100; // division for 10**4
-    uint _claimedAmount = _amount + _reward;
+    uint _stakePeriodInHour = (block.timestamp - stakeBoxs[_stakeID].stakeDate ) / 3600; // Stake Period in Hour ****
+    uint256 _amount = stakeBoxs[_stakeID].amount;
+    uint256 _reward = (_stakePeriodInHour * (stakeBoxs[_stakeID].rewardRate / 10**4)) * _amount / 100; // division for 10**4
+    uint256 _claimedAmount = _amount + _reward;
     require(stakeBoxs[_stakeID].unstakeDate == 0, "already-claimed-before");
     require(stakeBoxs[_stakeID].staker == msg.sender,"this-is-not-yours");
-    require(_stakePeriodInHour >= 24,"cant-unstake-before-24-hours"); //Unstake not permitted in first 24 hours
+    require(_stakePeriodInHour >= 24,"cant-unstake-before-24-hours"); //Unstake not permitted in first 24 hours ****
     stakeBoxs[_stakeID].unstakeDate = block.timestamp;
     stakeBoxs[_stakeID].claimedAmount = _claimedAmount;
     stakeBoxs[_stakeID].reward = _reward;
     stakeBoxs[_stakeID].isActive = false;
     totalDistrubutedReward += _reward;
     totalActiveStakeAmount -= _amount;
-    totalActiveStakes.sub(1);
+    totalActiveStakes -= 1;
     require(token.transfer(msg.sender, _claimedAmount),"Failed");
     emit evUnstake(msg.sender, _stakeID, _amount, _reward, _claimedAmount, block.timestamp);
     return true;
   }
   
     function BurnRemainingTokens() external returns (bool result) {
-    require(block.timestamp > (deployDate + termofacontract) + 86400,"out-of-date"); // Burnable after 24 hours from end time.
+    require(block.timestamp > (deployDate + termofacontract) + 86400,"out-of-date"); // Burnable after 24 hours from end time. //86400 ****
     token.burn(totalRewardAllocation - totalDistrubutedReward);
     return true;
   }
   
 
-    function MyStakes(address _staker) external view returns(uint[] memory) {
+    function Stakes(address _staker) external view returns(uint[] memory) {
     return ownerToStakes[_staker];
   }
     function TotalActiveStakes() external view returns (uint256 result) {
@@ -793,8 +797,11 @@ contract MoraStaking{
     return totalDistrubutedReward;
     }
     
-    function RemainingTokens() external view returns (uint256 result) {
+    function RemainingRewards() external view returns (uint256 result) {
         return totalRewardAllocation - totalDistrubutedReward;
     }
- 
+    function RemainingTimeEndOfContract() external view returns (uint result) {
+    return ((deployDate + termofacontract) - block.timestamp) / 3600; // in hours
+  }
+  
 }
